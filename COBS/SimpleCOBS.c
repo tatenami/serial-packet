@@ -4,8 +4,8 @@
  * @brief \c data をエンコードし \c encode_buf へ格納
  * 
  * @param data エンコードするデータのポインタ
- * @param data_size エンコードするデータのバイト数
  * @param encode_buf エンコードしたデータの格納先バッファのポインタ
+ * @param data_size エンコードするデータのバイト数
  * @return int: エンコード後のサイズ
  */
 int cobs_encode(const void *data, 
@@ -13,12 +13,12 @@ int cobs_encode(const void *data,
                 uint8_t     data_size)
 {
   const uint8_t *data_p = (const uint8_t *)data;
-  uint8_t read_index  = 0;
-  int     write_index = 1;
-  int     mark_index  = 0;
-  uint8_t mark_offset = 1;
+  uint8_t  read_index  = 0;
+  uint16_t write_index = 1;
+  uint8_t  mark_index  = 0;
+  uint8_t  mark_offset = 1;
 
-  if (data_size > MAX_DATA_SIZE)
+  if (data_size > COBS_MAX_DATA_SIZE)
     return 0;
 
   while (read_index < data_size) {
@@ -44,21 +44,19 @@ int cobs_encode(const void *data,
 /**
  * @brief \c encoded_buf をデコードし \c data へ格納
  * 
+ * @param encoded_buf エンコードされたデータを格納しているバッファのポインタ
  * @param data デコードしたデータの格納先ポインタ
  * @param data_size デコード後のデータのバイト数
- * @param encoded_buf エンコードされたデータを格納しているバッファのポインタ
  * @retval > 0: デコード後のサイズ
- * @retval == 0: \c data_size がデコード後のサイズより小さい or 
+ * @retval == 0: \c data_size がデコード後のサイズより小さい
  */
 int cobs_decode(const uint8_t *encoded_buf,
                 void     *data, 
                 uint8_t   data_size)
 {
   uint8_t *data_p = (uint8_t *)data;
-  int read_index  = 0;
-  int mark_index = 0;
-  int offset;
-  int cobs_size = COBS_ENCODED_SIZE(data_size);
+  uint16_t read_index = 0;
+  uint16_t cobs_size = COBS_ENCODED_SIZE(data_size);
 
   // 先頭・末端のバイト以外をコピー
   for (int i = 0; i < data_size; i++) {
@@ -81,7 +79,7 @@ int cobs_decode(const uint8_t *encoded_buf,
     data_p[read_index - 1] = 0x00;
   } 
 
-  if (read_index - 1 == data_size) {
+  if (COBS_DECODED_SIZE(read_index + 1) == data_size) {
     return data_size;
   }
   else {

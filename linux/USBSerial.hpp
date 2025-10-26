@@ -47,24 +47,21 @@ class USBSerial {
   std::string dev_file_;
 
  private:
-  void setLowLatency();
   void initTermios(BaudRate baudrate);
-  int  openFile(ReadMode mode);
+  int  openFile();
 
   // デバイスの切断チェック
   inline bool isDeviceConnect() {
     if (errno == ENXIO || errno == EIO || errno == ENODEV) {
-      available_ = false;
       return false;
-    };
+    }
 
     return true;
   }
 
  public:
   USBSerial(const char* dev_file, 
-            BaudRate baudrate = BaudRate::b115200, 
-            ReadMode mode = ReadMode::Blocking);
+            BaudRate baudrate = BaudRate::b115200);
   ~USBSerial();
 
   bool available();
@@ -79,8 +76,11 @@ class USBSerial {
 
     for (int i = 0; i < size; i++) {
       wsize = write(fd_, &buf_p[i], 1);
+      if (wsize < 0)
+        return 0;
 
-      if (!isDeviceConnect()) return 0;
+      if (!isDeviceConnect()) 
+        return 0;
     }
     
     return size;
@@ -95,7 +95,10 @@ class USBSerial {
     for (int i = 0; i < size; i++) {
       rsize = read(fd_, &buf_p[i], 1);
 
-      if (!isDeviceConnect()) return 0;
+      if (!isDeviceConnect()) {
+        available_ = false;
+        return 0;
+      }
     }
     
     return size;
