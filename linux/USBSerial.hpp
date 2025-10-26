@@ -72,7 +72,7 @@ class USBSerial {
   int send(T *buf) {
     int size = sizeof(T);
     int wsize;
-    uint8_t *buf_p = (uint8_t *)buf;
+    uint8_t *buf_p = static_cast<uint8_t *>(buf);
 
     for (int i = 0; i < size; i++) {
       wsize = write(fd_, &buf_p[i], 1);
@@ -90,7 +90,7 @@ class USBSerial {
   int receive(T *buf) {
     int size = sizeof(T);
     int rsize;
-    uint8_t *buf_p = (uint8_t *)buf;
+    uint8_t *buf_p = static_cast<uint8_t *>(buf);
 
     for (int i = 0; i < size; i++) {
       rsize = read(fd_, &buf_p[i], 1);

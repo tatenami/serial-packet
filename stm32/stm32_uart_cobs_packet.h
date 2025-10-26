@@ -4,8 +4,6 @@
 #include "main.h"
 #include "cobs_packet.h"
 
-// "ucp" is prefix that mean "uart cobs packet"
-
 int cp_uart_init_interrupt(UART_HandleTypeDef *huart);
 int cp_uart_interrupt_receive(UART_HandleTypeDef *huart, PacketInfo_t *info);
 int cp_uart_get_received_data(void *data, uint8_t size);
