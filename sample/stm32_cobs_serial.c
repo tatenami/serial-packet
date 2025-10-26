@@ -66,7 +66,7 @@ float theta, result;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
   // パケットの受信
-  if (!ucp_interrupt_receive(huart, &info)) {
+  if (!cp_uart_interrupt_receive(huart, &info)) {
     return;
   }
 
@@ -78,14 +78,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
 
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, 1);
   // 受信用パケットからデータを取得
-  int recv_size = ucp_get_received_data(&theta, sizeof(theta));
+  int recv_size = cp_uart_get_received_data(&theta, sizeof(theta));
   if (recv_size != sizeof(theta)) {
     return;
   }
 
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, 1);
   result = sinf(theta);
-  int packet_size = ucp_send_packet(&huart3, &result, sizeof(result));
+  int packet_size = cp_uart_send_packet(&huart3, &result, sizeof(result));
   if (packet_size != PACKET_SIZE(sizeof(result))) {
     return;
   }
@@ -131,7 +131,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   // メイン処理前に必ず記述
-  ucp_init_interrupt(&huart3);
+  cp_uart_init_interrupt(&huart3);
 
   /* USER CODE END 2 */
 
