@@ -1,5 +1,5 @@
-#ifndef PACKET_H
-#define PACKET_H
+#ifndef COBS_PACKET_H
+#define COBS_PACKET_H
 
 #include <stdint.h>
 #include "SimpleCOBS.h"

@@ -53,10 +53,10 @@ uint8_t cp_verify_checksum(const uint8_t *payload, const PacketInfo_t *info) {
  * @retval 1: チェックサムが一致
  * @retval 0: チェックサムが不一致
  */
-uint8_t cp_verify_packet_checksum(const uint8_t *pakcet) {
+uint8_t cp_verify_packet_checksum(const uint8_t *packet) {
   PacketInfo_t info;
-  cp_get_packet_info(pakcet, &info);
-  return cp_verify_checksum(pakcet, &info);
+  cp_get_packet_info(packet, &info);
+  return cp_verify_checksum(&packet[HEADER_SIZE], &info);
 }
 
 #if USE_INTERNAL_BUF
