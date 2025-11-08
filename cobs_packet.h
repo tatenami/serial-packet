@@ -13,8 +13,8 @@ typedef struct {
 } PacketInfo_t;
 
 typedef struct {
-  uint8_t *const buf;
-  uint8_t *const payload;
+  uint8_t *const buf;     // pointer of packet buffer
+  uint8_t *const payload; // pointer of payload in packet buffer
 } PacketBuf_t;
 
 // start of packet

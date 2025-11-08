@@ -1,4 +1,5 @@
 #include "cobs_packet.h"
+#include <stdint.h>
 
 /**
  * @brief ペイロード末尾が 0x00 かを確認
@@ -56,7 +57,7 @@ uint8_t cp_verify_checksum(const uint8_t *payload, const PacketInfo_t *info) {
 uint8_t cp_verify_packet_checksum(const uint8_t *packet) {
   PacketInfo_t info;
   cp_get_packet_info(packet, &info);
-  return cp_verify_checksum(&packet[HEADER_SIZE], &info);
+  return cp_verify_checksum((packet + HEADER_SIZE), &info);
 }
 
 #if USE_INTERNAL_BUF
@@ -67,11 +68,11 @@ static uint8_t internal_recv_buf[PACKET_SIZE(MAX_RECV_DATA_SIZE)] = {};
 
 PacketBuf_t cp_send_packet = {
   .buf = internal_send_buf,
-  .payload = &internal_send_buf[HEADER_SIZE],
+  .payload = (internal_send_buf + HEADER_SIZE),
 };
 PacketBuf_t cp_recv_packet = {
   .buf = internal_recv_buf,
-  .payload = &internal_recv_buf[HEADER_SIZE],
+  .payload = (internal_recv_buf + HEADER_SIZE),
 };
 
 /**
