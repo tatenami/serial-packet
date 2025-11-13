@@ -78,26 +78,25 @@ PacketBuf_t cp_recv_packet = {
 /**
  * @brief データがCOBSエンコードされたパケットを作成する
  * 
- * @param type_id 
  * @param data エンコードし，ペイロードにするデータ
  * @param data_size データサイズ 
  * @retval 0: パケット作成失敗
  * @retval > 0: 作成したパケットのサイズ 
  */
 int cp_make_packet(const void *data, const uint8_t data_size) {
-  uint8_t exp_encoded_size = COBS_ENCODED_SIZE(data_size);
+  if (data_size > MAX_SEND_DATA_SIZE)
+    return 0;
 
+  uint8_t exp_encoded_size = COBS_ENCODED_SIZE(data_size);
   internal_send_buf[0] = SOP;
 
   uint8_t encoded_size = cobs_encode(data, cp_send_packet.payload, data_size);
-  if (exp_encoded_size != encoded_size) {
+  if (exp_encoded_size != encoded_size)
     return 0;
-  }
 
   internal_send_buf[1] = encoded_size;
-  if (cp_send_packet.payload[encoded_size - 1] != 0x00) {
+  if (cp_send_packet.payload[encoded_size - 1] != 0x00)
     return 0;
-  }
 
   internal_send_buf[2] = calc_checksum(cp_send_packet.payload, encoded_size);
 
@@ -113,8 +112,10 @@ int cp_make_packet(const void *data, const uint8_t data_size) {
  * @retval 0 >: デコードしたデータのサイズ
  */
 int cp_get_data(void *data, uint8_t data_size) {
-  uint8_t *payload = &internal_recv_buf[HEADER_SIZE];
+  if (data_size > MAX_RECV_DATA_SIZE)
+    return 0;
 
+  uint8_t *payload = &internal_recv_buf[HEADER_SIZE];
   if (!cp_check_payload(payload, COBS_ENCODED_SIZE(data_size)))
     return 0;
 
