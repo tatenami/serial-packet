@@ -2,48 +2,43 @@
 #define COBS_PACKET_H
 
 #include <stdint.h>
-#include "SimpleCOBS.h"
+#include "COBS/SimpleCOBS.h"
 #include "cobs_packet_config.h"
-
-#define USE_INTERNAL_BUF 1
-
-typedef struct {
-  uint8_t payload_size; // data size (encoded)
-  uint8_t checksum; // check sum of payload
-} PacketInfo_t;
-
-typedef struct {
-  uint8_t *const buf;     // pointer of packet buffer
-  uint8_t *const payload; // pointer of payload in packet buffer
-} PacketBuf_t;
 
 // start of packet
 #define SOP  (0xAA) 
-// header (3byte): | HAEDER_VAL (0xAA) | payload_size | check-sum | 
-#define HEADER_SIZE (3)
-#define PAYLOAD_MAX_SIZE COBS_ENCODED_SIZE(COBS_MAX_DATA_SIZE)
-#define PACKET_SIZE(data_size) (HEADER_SIZE + COBS_ENCODED_SIZE(data_size))
-#define PACKET_MAX_SIZE (PACKET_SIZE(COBS_MAX_DATA_SIZE))
+// header (7 byte): | SOP(1) | type(1) | seq(1) | payload_size(2) | check-sum(2) |
+#define CP_HEADER_SIZE (7)
+#define CP_PAYLOAD_SIZE_MAX COBS_ENCODED_SIZE_MAX(CP_MAX_DATA_SIZE)
+#define CP_PACKET_SIZE_MAX(data_size) (CP_HEADER_SIZE + COBS_ENCODED_SIZE_MAX(data_size))
 
-int cp_check_payload(const uint8_t *paylaod, uint8_t size);
-void cp_get_packet_info(const uint8_t *packet, PacketInfo_t *info);
-uint8_t cp_verify_checksum(const uint8_t *payload, const PacketInfo_t *info);
-uint8_t cp_verify_packet_checksum(const uint8_t *pakcet);
+typedef struct __attribute__((packed)) {
+  uint8_t  sop;  // パケット先頭検出用固定値
+  uint8_t  type; // パケット種別 
+  uint8_t  seq;  // シーケンス番号 
+  uint16_t payload_len; // ペイロード長 (COBS エンコード後)
+  uint16_t checksum; // ペイロードのチェックサム
+} PacketHeader_t;
 
-#if USE_INTERNAL_BUF
+typedef struct {
+  uint8_t *buf;
+  uint32_t buf_size;
+} SendPacket_t;
 
-extern PacketBuf_t cp_send_packet;
-extern PacketBuf_t cp_recv_packet;
+typedef struct {
+  uint8_t *buf; 
+  uint32_t buf_size;
+  uint8_t *payload; // バッファアドレス + HEADER_SIZE
+  uint32_t payload_len;
+} RecvPacket_t;
 
-int cp_make_packet(const void *data, const uint8_t data_size);
-int cp_get_data(void *data, uint8_t data_size);
-
-#else
-
-int cp_make_packet(uint8_t *packet, const void *data, const uint8_t data_size);
-int cp_get_data(uint8_t *packet, void *data, uint8_t data_size);
-
-#endif
-
+int cp_check_payload_encoded(const uint8_t *paylaod, uint32_t size);
+int cp_init_send_packet(SendPacket_t *send_packet, uint8_t *buf, uint32_t buf_size);
+int cp_make_send_packet(SendPacket_t *send_packet, uint8_t type, uint8_t seq, const void *data, const uint16_t data_size);
+int cp_parse_header(PacketHeader_t* const header, const uint8_t *buf, uint32_t buf_size);
+int cp_init_recv_packet(RecvPacket_t *recv_packet, uint8_t *buf, uint32_t buf_size);
+int cp_verify_checksum(PacketHeader_t *header, const uint8_t *payload, uint32_t payload_len);
+int cp_parse_recv_packet(PacketHeader_t *header, RecvPacket_t* const recv_packet);
+int cp_get_payload_data(RecvPacket_t *recv_packet, void *data, uint16_t data_size);
 
 #endif // PACKET_H

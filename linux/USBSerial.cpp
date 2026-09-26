@@ -4,7 +4,7 @@ USBSerial::USBSerial(const char *dev_file, BaudRate baudrate) {
   dev_file_ = dev_file;
 
   fd_ = openFile();
-  available_ = (fd_ > 0) ? true : false;
+  available_ = (fd_ >= 0) ? true : false;
 
   initTermios(baudrate);
 }
@@ -16,6 +16,7 @@ USBSerial::~USBSerial() {
 void USBSerial::initTermios(BaudRate baudrate) {
   baud_rate_ = (speed_t)baudrate;
 
+  tcgetattr(fd_, &tio_config_);
   // 生データを扱う設定
   cfmakeraw(&tio_config_); 
 
