@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "../COBS/SimpleCOBS.h"
+#include "../simple_cobs.h"
 
 #define BUF_SIZE 1024
 

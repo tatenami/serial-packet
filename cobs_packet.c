@@ -53,6 +53,7 @@ int cp_init_send_packet(SendPacket_t *send_packet, uint8_t *buf, uint32_t buf_si
 
   send_packet->buf = buf;
   send_packet->buf_size = buf_size;
+  send_packet->packet_size = 0;
 
   return 1;
 }
@@ -73,19 +74,22 @@ int cp_make_send_packet(SendPacket_t *send_packet, uint8_t type, uint8_t seq,
   const void *data, const uint16_t data_size)
 {
   if (data_size > CP_MAX_SEND_DATA_SIZE) {
+    send_packet->packet_size = 0;
     return 0;
   }
   
   if (send_packet->buf == NULL) {
+    send_packet->packet_size = 0;
     return 0;
   }
 
-  uint8_t *payload = send_packet->buf + CP_HEADER_SIZE;
+  uint8_t *payload = (CP_HEADER_SIZE + send_packet->buf);
   // データを COBS エンコード
   int encoded_len = cobs_encode((uint8_t *)data, data_size, 
     payload, (send_packet->buf_size - CP_HEADER_SIZE));
 
   if (encoded_len < 0) {
+    send_packet->packet_size = 0;
     return 0;
   }
 
@@ -96,7 +100,10 @@ int cp_make_send_packet(SendPacket_t *send_packet, uint8_t type, uint8_t seq,
 
   cp_make_header(send_packet->buf, type, seq, encoded_len, checksum);
 
-  return (CP_HEADER_SIZE + encoded_len);
+  uint32_t packet_size = CP_HEADER_SIZE + encoded_len;
+  send_packet->packet_size = packet_size;
+
+  return packet_size;
 }
 
 /**
@@ -131,11 +138,12 @@ int cp_parse_header(PacketHeader_t* const header, const uint8_t *buf, uint32_t b
  * @retval 1: 成功
  * @retval 0: バッファサイズ不足
  */
-int cp_init_recv_packet(RecvPacket_t *recv_packet, uint8_t *buf, uint32_t buf_size) {
+int cp_init_recv_packet(RecvPacket_t *recv_packet, PacketHeader_t *header, uint8_t *buf, uint32_t buf_size) {
   if (buf_size < CP_HEADER_SIZE) {
     return 0;
   }
 
+  recv_packet->header = header;
   recv_packet->buf = buf;
   recv_packet->buf_size = buf_size;
   recv_packet->payload_len = 0;
@@ -165,22 +173,28 @@ int cp_verify_checksum(PacketHeader_t *header, const uint8_t *payload, uint32_t 
 }
 
 /**
- * @brief PacketHeader_t を基にパケットを解析して RecvPacket_t にペイロードデータを格納
+ * @brief パケットを解析して RecvPacket_t にペイロードデータを格納
  * @param header 解析対象のパケットのヘッダ情報を持つ PacketHeader_t のポインタ
  * @param packet 受信パケットのバッファを持つ Packet_t のポインタ
  * @retval 1: 解析，データ格納成功
  * @retval 0: データ格納失敗
  */
-int cp_parse_recv_packet(PacketHeader_t *header, RecvPacket_t* const recv_packet) {
-  if (header->payload_len == 0) {
+int cp_parse_recv_packet(RecvPacket_t* recv_packet) {
+  uint32_t payload_len = recv_packet->header->payload_len;
+
+  if (payload_len == 0) {
     return 0;
   }
 
-  if (!cp_check_payload_encoded(recv_packet->payload, header->payload_len)) {
+  if (!cp_check_payload_encoded(recv_packet->payload, payload_len)) {
     return 0;
   }
 
-  recv_packet->payload_len = header->payload_len;
+  if (!cp_verify_checksum(recv_packet->header, recv_packet->payload, payload_len)) {
+    return 0;
+  }
+
+  recv_packet->payload_len = payload_len;
 
   return 1;
 }

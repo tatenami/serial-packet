@@ -2,7 +2,7 @@
 #define COBS_PACKET_H
 
 #include <stdint.h>
-#include "COBS/SimpleCOBS.h"
+#include "simple_cobs.h"
 #include "cobs_packet_config.h"
 
 // start of packet
@@ -20,25 +20,35 @@ typedef struct __attribute__((packed)) {
   uint16_t checksum; // ペイロードのチェックサム
 } PacketHeader_t;
 
+/**
+ * @brief 送信用パケットのデータ管理
+ * 
+ */
 typedef struct {
   uint8_t *buf;
   uint32_t buf_size;
+  uint32_t packet_size;
 } SendPacket_t;
 
+/**
+ * @brief 受信用パケットのデータ管理
+ * 
+ */
 typedef struct {
   uint8_t *buf; 
   uint32_t buf_size;
   uint8_t *payload; // バッファアドレス + HEADER_SIZE
   uint32_t payload_len;
+  PacketHeader_t *header;
 } RecvPacket_t;
 
 int cp_check_payload_encoded(const uint8_t *paylaod, uint32_t size);
 int cp_init_send_packet(SendPacket_t *send_packet, uint8_t *buf, uint32_t buf_size);
 int cp_make_send_packet(SendPacket_t *send_packet, uint8_t type, uint8_t seq, const void *data, const uint16_t data_size);
 int cp_parse_header(PacketHeader_t* const header, const uint8_t *buf, uint32_t buf_size);
-int cp_init_recv_packet(RecvPacket_t *recv_packet, uint8_t *buf, uint32_t buf_size);
+int cp_init_recv_packet(RecvPacket_t *recv_packet, PacketHeader_t *header, uint8_t *buf, uint32_t buf_size);
 int cp_verify_checksum(PacketHeader_t *header, const uint8_t *payload, uint32_t payload_len);
-int cp_parse_recv_packet(PacketHeader_t *header, RecvPacket_t* const recv_packet);
+int cp_parse_recv_packet(RecvPacket_t *recv_packet);
 int cp_get_payload_data(RecvPacket_t *recv_packet, void *data, uint16_t data_size);
 
 #endif // PACKET_H
