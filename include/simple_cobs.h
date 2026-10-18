@@ -3,11 +3,11 @@
 
 #include <stdint.h>
 
-#define COBS_ENCODED_SIZE_MAX(size) \
+#define COBS_MAX_ENCODED_SIZE(size) \
   ((uint32_t)(size) + ((uint32_t)(size) / 254U) + 2U)
 // +2: first offset, end byte
 
-#define COBS_DECODED_SIZE_MAX(size) ((uint32_t)(size) - 1U) 
+#define COBS_MAX_DECODED_SIZE(size) ((uint32_t)(size) - 2U) 
 #define COBS_DECODED_SIZE_MIN(size) ((uint32_t)(size) - 2U) 
 
 int cobs_encode(const uint8_t *raw, const uint32_t raw_len, uint8_t *encoded_buf, uint32_t encoded_buf_size);

@@ -2,7 +2,7 @@
 #define STM32_UART_COBS_PACKET_H
 
 #include "main.h"
-#include "../cobs_packet.h"
+#include "cobs_packet.h"
 
 int cp_uart_interrupt_receive_header(UART_HandleTypeDef *huart, RecvPacket_t *recv_packet);
 int cp_uart_receive_payload(UART_HandleTypeDef *huart, RecvPacket_t *recv_packet);

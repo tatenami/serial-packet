@@ -21,7 +21,7 @@ int cobs_encode(const uint8_t *raw,
   uint32_t mark_index  = 0;
   uint8_t  mark_offset = 1;
 
-  if (encoded_buf_size < COBS_ENCODED_SIZE_MAX(raw_len))
+  if (encoded_buf_size < COBS_MAX_ENCODED_SIZE(raw_len))
     return -1;
 
   while (read_index < raw_len) {
