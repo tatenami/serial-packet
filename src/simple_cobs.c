@@ -110,6 +110,7 @@ int cobs_decode(const uint8_t *encoded_buf,
       write_index++;
     }
 
+    // offset が 255 でなければ 0x00 を追加
     if ((offset != 0xFF) && (read_index < (encoded_buf_len - 1))) {
       if (write_index >= raw_size) {
         return -1;
