@@ -12,6 +12,7 @@
 #define CP_MAX_PAYLOAD_SIZE COBS_MAX_ENCODED_SIZE(CP_MAX_DATA_SIZE)
 #define CP_MAX_PACKET_SIZE(data_size) (CP_HEADER_SIZE + COBS_MAX_ENCODED_SIZE(data_size))
 #define CP_MAX_SUPPORTED_PAYLOAD_SIZE UINT16_MAX // このライブラリで利用可能な最大サイズ
+#define CP_MAX_SUPPORTED_DATA_SIZE COBS_MAX_DECODED_SIZE(CP_MAX_SUPPORTED_PAYLOAD_SIZE)
 
 // 処理ステータス
 typedef int32_t cp_status_t;
@@ -47,12 +48,12 @@ typedef struct {
   PacketHeader_t *header;
 } RecvPacket_t;
 
-int cp_check_payload_encoded(const uint8_t *paylaod, uint32_t size);
+int cp_check_payload_encoded(const uint8_t *paylaod, uint16_t size);
 cp_status_t cp_init_send_packet(SendPacket_t *send_packet, uint8_t *buf, uint32_t buf_size);
 cp_status_t cp_make_send_packet(SendPacket_t *send_packet, uint8_t type, uint8_t seq, const void *data, const uint16_t data_size);
-cp_status_t cp_parse_header(PacketHeader_t* const header, const uint8_t *buf, uint32_t buf_size);
+cp_status_t cp_parse_header(PacketHeader_t* const header, const uint8_t *buf, uint16_t buf_size);
 cp_status_t cp_init_recv_packet(RecvPacket_t *recv_packet, PacketHeader_t *header, uint8_t *buf, uint32_t buf_size);
-int cp_verify_checksum(PacketHeader_t *header, const uint8_t *payload, uint32_t payload_len);
+int cp_verify_checksum(PacketHeader_t *header, const uint8_t *payload, uint16_t payload_len);
 cp_status_t cp_parse_recv_header(RecvPacket_t *recv_packet);
 cp_status_t cp_parse_recv_packet(RecvPacket_t *recv_packet);
 cp_status_t cp_get_payload_data(RecvPacket_t *recv_packet, void *buf, uint16_t buf_size);

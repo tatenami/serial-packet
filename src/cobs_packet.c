@@ -14,7 +14,7 @@ static uint16_t FLETCHER16_BLOCK_LEN = 64;
  * @retval 1: ペイロード末尾 (len バイト目) が 0x00 
  * @retval 0: ペイロード末尾 (len バイト目) が 0x00 でない
  */
-int cp_check_payload_encoded(const uint8_t *paylaod, uint32_t len) {
+int cp_check_payload_encoded(const uint8_t *paylaod, uint16_t len) {
   return (paylaod[len - 1] == 0x00);
 }
 
@@ -53,6 +53,15 @@ static uint16_t calc_checksum_fletcher16(const uint8_t *payload, const uint16_t 
   return (uint16_t)((sum2 << 8) | sum1);
 }
 
+/**
+ * @brief ヘッダデータの作成
+ * 
+ * @param buf  データを格納するバッファのポインタ
+ * @param type パケットの type
+ * @param seq  パケットの seq
+ * @param payload_len ペイロードのバイト長 (COBS エンコード後)
+ * @param checksum ペイロードを COBS エンコードした後のチェックサム
+ */
 static void cp_make_header(uint8_t *buf, uint8_t type, uint8_t seq, 
                           uint16_t payload_len, uint16_t checksum) 
 {
@@ -71,7 +80,7 @@ static void cp_make_header(uint8_t *buf, uint8_t type, uint8_t seq,
  * @param send_packet SendPacket_t のポインタ
  * @param buf 割り当てるバッファのポインタ
  * @param buf_size 割り当てるバッファのサイズ
- * @retval 0: バッファサイズ不足
+ * @retval < 0: バッファサイズ不足
  * @retval 1: 初期化成功
  */
 cp_status_t cp_init_send_packet(SendPacket_t *send_packet, uint8_t *buf, uint32_t buf_size) {
@@ -95,7 +104,7 @@ cp_status_t cp_init_send_packet(SendPacket_t *send_packet, uint8_t *buf, uint32_
  * @param seq パケットのシーケンス番号
  * @param data エンコードし，ペイロードにするデータ
  * @param data_size データサイズ 
- * @retval 0: パケット作成失敗
+ * @retval < 0: パケット作成失敗
  * @retval > 0: 作成したパケットのサイズ 
  */
 cp_status_t cp_make_send_packet(SendPacket_t *send_packet, uint8_t type, uint8_t seq, 
@@ -149,7 +158,7 @@ cp_status_t cp_make_send_packet(SendPacket_t *send_packet, uint8_t type, uint8_t
  * @retval 1: 解析，データ格納成功
  * @retval < 0: バッファサイズ不足
  */
-cp_status_t cp_parse_header(PacketHeader_t* const header, const uint8_t *buf, uint32_t buf_size) {
+cp_status_t cp_parse_header(PacketHeader_t* const header, const uint8_t *buf, uint16_t buf_size) {
   if (buf_size < CP_HEADER_SIZE) {
     return CP_ERR_BUF_SIZE_TOO_SMALL;
   }
@@ -201,7 +210,7 @@ cp_status_t cp_init_recv_packet(RecvPacket_t *recv_packet, PacketHeader_t *heade
  * @retval 1: チェックサムが一致
  * @retval 0: チェックサムが不一致
  */
-int cp_verify_checksum(PacketHeader_t *header, const uint8_t *payload, uint32_t payload_len) {
+int cp_verify_checksum(PacketHeader_t *header, const uint8_t *payload, uint16_t payload_len) {
   uint16_t checksum = calc_checksum_fletcher16(payload, payload_len);
   return (checksum == header->checksum);
 }
@@ -252,8 +261,8 @@ cp_status_t cp_parse_recv_packet(RecvPacket_t* recv_packet) {
  * @param packet パケットのバッファ
  * @param data 格納先データ
  * @param data_size 格納先のデータのサイズ
- * @retval 0 >=: デコードしたデータのサイズ
- * @retval < 0: 失敗
+ * @retval >= 0: デコードしたデータのサイズ
+ * @retval  < 0: 失敗
  */
 cp_status_t cp_get_payload_data(RecvPacket_t *recv_packet, void *buf, uint16_t buf_size) {
   if (recv_packet->payload_len == 0) {
